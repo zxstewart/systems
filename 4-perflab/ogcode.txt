@@ -1,0 +1,90 @@
+//original code for FilterMain.cpp
+double
+applyFilter(class Filter *filter, cs1300bmp *input, cs1300bmp *output)
+{
+
+  long long cycStart, cycStop;
+
+  cycStart = rdtscll();
+
+  output -> width = input -> width;
+  output -> height = input -> height;
+
+
+  for(int col = 1; col < (input -> width) - 1; col = col + 1) {
+    for(int row = 1; row < (input -> height) - 1 ; row = row + 1) {
+      for(int plane = 0; plane < 3; plane++) {
+
+	output -> color[plane][row][col] = 0;
+
+	for (int j = 0; j < filter -> getSize(); j++) {
+	  for (int i = 0; i < filter -> getSize(); i++) {	
+	    output -> color[plane][row][col]
+	      = output -> color[plane][row][col]
+	      + (input -> color[plane][row + i - 1][col + j - 1] 
+		 * filter -> get(i, j) );
+	  }
+	}
+	
+	output -> color[plane][row][col] = 	
+	  output -> color[plane][row][col] / filter -> getDivisor();
+
+	if ( output -> color[plane][row][col]  < 0 ) {
+	  output -> color[plane][row][col] = 0;
+	}
+
+	if ( output -> color[plane][row][col]  > 255 ) { 
+	  output -> color[plane][row][col] = 255;
+	}
+      }
+    }
+  }
+
+  cycStop = rdtscll();
+  double diff = cycStop - cycStart;
+  double diffPerPixel = diff / (output -> width * output -> height);
+  fprintf(stderr, "Took %f cycles to process, or %f cycles per pixel\n",
+	  diff, diff / (output -> width * output -> height));
+  return diffPerPixel;
+}
+
+
+
+
+
+
+## original code for Makefile
+##
+
+CXX	=g++
+
+##
+## Use our standard compiler flags for the course...
+## You can try changing these flags to improve performance.
+##
+CXXFLAGS= -g -O0 -fno-omit-frame-pointer -Wall
+
+goals: judge
+	@echo "Done"
+
+filter: FilterMain.cpp Filter.cpp cs1300bmp.cc cs1300bmp.h Filter.h rdtsc.h
+	$(CXX) $(CXXFLAGS) -o filter FilterMain.cpp Filter.cpp cs1300bmp.cc
+
+##
+## Parameters for the test run
+##
+FILTERS = gauss.filter vline.filter hline.filter emboss.filter
+IMAGES = boats.bmp blocks-small.bmp
+TRIALS = 1 2 3 4
+
+judge: filter
+	-./Judge -p ./filter -i boats.bmp
+	-./Judge -p ./filter -i blocks-small.bmp
+
+test:	filter
+	@find filtered*bmp | xargs -I @@ bash -c 'cmp --silent @@ tests/@@ && echo @@ looks correct. || echo INCORRECT: @@ does not match the reference image tests/@@.'
+
+clean:
+	-rm -f *.o
+	-rm -f filter
+	-rm -f filtered-*.bmp

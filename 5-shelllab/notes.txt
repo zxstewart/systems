@@ -1,0 +1,59 @@
+entry/exit logic of fork:
+    fork() creates a new process by duplicating the calling process, which becomes the child to the original
+    w unique pid
+    if fork() is successful, parent returns child pid, and child returns 0, otherwise parent returns -1 and
+    child does not exist
+    fork = new process, parent and child execute at the same time
+
+arguments to exec and what happens if exec fails:
+    exec replaces current process image with new and loads program to current process space to run from
+    entry point
+    exec = replace process w diff
+    if exec() error, child writes error code back to parent and exits
+    execv() arguments: argv array of null-terminated strings which provide value for argv to main function
+    to be executed-- last element must be a null pointer while first           
+    element is the file name to be executed as a new process image
+
+process group purpose and implementations:
+    process group allows us to differentiate between foreground and background
+
+
+modifications to jobs and why needed:
+    adding and deleting and updating status
+    needed to keep track and avoiding abundant zombie-processes
+
+identify race and fix for race:
+https://condor.depaul.edu/~glancast/374class/docs/lecJan27.html#slide11
+    race between child and shell, process tabe can be corrupted if child wins
+    shell blocks child signal just before calling fork(), and then unblocks after child has been added to
+    job table
+    The shell forks a child process to execute a program.
+    The child begins execution of the program.
+    Meanwhile, the shell adds the child process to the job table.
+    When the child terminates, the shell's SIGCHLD handler removes the child process from the job table.
+
+
+SIGTSTP code function:
+SIGINT – default action is to terminate each process
+SIGTSTP – default action is to stop (suspend) each process
+
+    control flow when user presses ctrl-z:
+    Typing ctrl‐c (ctrl‐z) sends a SIGINT (SIGTSTP) to every job in the
+    foreground process group
+    Pressing this key causes the system to send a TSTP signal (SIGTSTP) to the running process. By
+    default, this signal causes the process to suspend execution.
+
+    
+SIGCHILD explain three cases, stopped, normal, signaled:
+    child process stops or terminates, SIGCHLD is sent to the parent process
+    default reaction is to ignore
+    using sighandler signal can be caught and the exit status from the child process can be obtained by
+    immediately     calling wait(2) and wait3(3C). This allows zombie process entries to be removed as
+    quickly as     possible.
+    When the handler executes its return statement, control passes back to instruction in the control
+    flow of the process that was interrupted by receipt of the signal
+
+    child state updated for ctrl-c:    
+    child state updated for each ctrl-z:
+    gets passed from kernel to shell and the shell passes the signal and pid, and updates the state
+    
